@@ -1,6 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_tutorial/api_service.dart';
 import 'package:riverpod_tutorial/counter_demo.dart';
+import 'package:riverpod_tutorial/user_model.dart';
+
+
+
+
+
+// -----------
+
+final apiProvider = Provider<ApiService>(
+  (ref) {
+    return ApiService();
+  },
+);
+
+final userDataProvider = FutureProvider<List<UserModel>>((ref) {
+    return ref.read(apiProvider).getUser();
+},);
+
+
+// -------------------------------------
 
 
 final nameProvider = Provider<String>(
@@ -8,7 +29,6 @@ final nameProvider = Provider<String>(
     return "Shiran kumarasingha";
   }
 );
-
 
 // ---
 
@@ -38,7 +58,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MySecondHomePage(),
+      home: const GetDataDromApi(),
     );
   }
 }
@@ -56,6 +76,7 @@ class MyHomePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('River PodProvider'),
+       
       ),
 
       body:  Center(child: Text(name)),
@@ -85,7 +106,6 @@ class SecondHomeClass extends StatelessWidget {
     );
   }
 }
-
 
 // --
 
@@ -192,6 +212,46 @@ class MyThirdHomePage extends ConsumerWidget {
           ref.read(newCounterProvider.notifier).increment();
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+
+// get data from api -----------------------
+
+
+class GetDataDromApi extends ConsumerWidget {
+  const GetDataDromApi({super.key});
+
+  @override
+  Widget build(BuildContext context ,WidgetRef ref) {
+    final userData = ref.watch(userDataProvider);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('User Data'),
+         backgroundColor: Colors.amber,
+      ),
+
+      body: userData.when(
+        data: (data) {
+          return ListView.builder(
+            itemCount: data.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text('${data[index].firstName} ${data[index].lastName}'),
+                subtitle: Text('${data[index].email}'),
+                leading: CircleAvatar(child: Image.network(data[index].avatar!),),
+              );
+            },
+          );
+        }, 
+        error: (error, stackTrace) => Text(error.toString()), 
+        loading: () {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
       ),
     );
   }
